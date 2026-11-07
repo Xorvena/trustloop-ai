@@ -1,0 +1,29 @@
+export type Decision = "APPROVED" | "REQUIRES_APPROVAL" | "REVIEW" | "BLOCKED";
+export interface User { id: string; email: string; name: string }
+export interface Agent { id: string; agent_id: string; agent_name: string; description: string; status: string; max_transaction: string; currency: string; allowed_categories: string[]; trust_score: number | null; created_at: string }
+export interface Policy { id: string; name: string; raw_text: string; currency: string; max_budget: string; approval_threshold: string; approved_merchants_only: boolean; duplicate_purchase_check: boolean; auto_approve_enabled: boolean; approval_ttl_minutes: number; is_active: boolean; approved_merchants: string[]; created_at: string }
+export interface PolicyDraft { currency: string; max_budget: string; approval_threshold: string; approved_merchants_only: boolean; duplicate_purchase_check: boolean; approved_merchants: string[]; source: string }
+export interface PolicyParseResponse { draft: PolicyDraft; source: "gemini" | "heuristic_fallback"; model: string | null; used_fallback_model?: boolean; fallback_reason: string | null; fallback_message: string | null }
+export interface Product { id: string; sku: string; name: string; brand: string; model: string; merchant: string; category: string; product_type: string; price: string; currency: string; description: string; specs: Record<string, string | number | boolean | string[]>; availability: string; image_url: string | null; image_source: string | null; source: string }
+export interface RiskSignal { code: string; points: number; detail: string; source: string; severity?: string }
+export interface Risk { score: number; level: string; signals: RiskSignal[]; ai_signals: RiskSignal[]; ai_used: boolean }
+export interface RuleCheck { rule: string; passed: boolean; severity: string; detail: string }
+export interface Proposal { id: string; agent_id: string; agent_name: string; product_id: string; product_name: string; merchant: string; category: string; amount: string; currency: string; state: string; decision: Decision | null; decision_explanation: { summary?: string; checks?: RuleCheck[] }; risk: Risk | null; request_text: string; rationale: string; created_at: string }
+export interface Approval { id: string; proposal_id: string; status: string; kind: string; reason: string; amount: string; currency: string; merchant: string; product_name: string; image_url: string | null; image_source: string | null; agent_id: string; agent_name: string; agent_trust_score: number | null; policy_evaluation: { summary?: string; checks?: RuleCheck[] }; risk: Risk | null; expires_at: string; created_at: string }
+export interface TxRow { id: string; transaction_id: string | null; product_name: string; merchant: string; amount: string; currency: string; agent_id: string; agent_name: string; decision: Decision | null; state: string; payment_status: string | null; risk_level: string | null; created_at: string }
+export interface AuditEntry { id: string; timestamp: string; actor: string; action: string; proposal_id: string | null; details: Record<string, unknown> }
+export interface RequirementCheck { key: string; label: string; met: boolean; detail: string }
+export interface SearchResult { product: Product; kind: "match" | "alternative"; score: number; merchant_approved: boolean; unconfirmed_terms: string[]; meets_requirements: boolean; checks: RequirementCheck[]; unmet: string[]; relation: string | null; suspicious_description: boolean; injection_flags: string[] }
+export interface SearchResponse {
+  status: "matches_found" | "no_exact_match" | "nothing_found"; requirements: Record<string, unknown>; interpreted_as: string[]; unverifiable_terms: string[]; notes: string[];
+  summary: string; summary_source: "gemini" | "template"; summary_model: string | null; summary_used_fallback_model: boolean; summary_fallback_reason: string | null; summary_fallback_message: string | null;
+  intent_source: "gemini" | "heuristic"; intent_model: string | null; intent_used_fallback_model: boolean; intent_fallback_reason: string | null; intent_fallback_message: string | null; intent_notes: string[];
+  provider_status: { provider: string; ok: boolean; count: number; code: string | null; message: string | null }[];
+  catalog_notice: string; matches: SearchResult[]; alternatives: SearchResult[]; results: SearchResult[];
+}
+export interface Overview { is_demo_data: boolean; total_spending: Record<string, string>; approved_transactions: number; captured_transactions: number; blocked_transactions: number; pending_approvals: number; active_agents: number; total_agents: number; agent_trust: { agent_id: string; agent_name: string; score: number }[]; recent_transactions: TxRow[]; risk_alerts: { proposal_id: string; agent_id: string; product_name: string; level: string; score: number; signals: string[]; created_at: string }[]; activity: { id: string; timestamp: string; actor: string; action: string; proposal_id: string | null }[] }
+export interface TrustComponent { weight: number; rate: number; points: number; observations: number; good: number; description: string }
+export interface TrustDetail { agent_id: string; agent_name: string; score: number; components: Record<string, TrustComponent>; note: string; history: { score: number; reason: string; created_at: string }[] }
+export interface Health { status: string; database: string; gemini_configured: boolean; gemini_model: string; paypal_configured: boolean; paypal_webhook_configured: boolean }
+export interface BudgetItem { proposal_id: string; product_name: string; merchant: string; amount: string; currency: string; state: string; cancellable: boolean; created_at: string; authorization_expires_at: string | null }
+export interface Budget { policy_active: boolean; currency: string; max_budget: string | null; committed: string; remaining: string | null; items: BudgetItem[] }
