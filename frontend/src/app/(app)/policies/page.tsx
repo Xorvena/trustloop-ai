@@ -98,7 +98,7 @@ export default function Policies() {
           <p className="mt-3 text-xs text-slate-500">Interpretation is a draft only. Nothing changes until you confirm, and AI can never edit a saved policy.</p>
         </Card>
         <Card className="p-5">
-          <h2 className="mb-3 font-medium text-white">Interpreted policy <span className="text-sm font-normal text-slate-500">· editable before saving</span></h2>
+          <h2 className="mb-3 font-medium text-strong">Interpreted policy <span className="text-sm font-normal text-slate-500">· editable before saving</span></h2>
           {parsing ? <SkeletonRows n={4} /> : !parsed || !fields ? <EmptyState title="Nothing to review yet" hint="Interpret your rules to preview the structured policy here." /> : (
             <div className="space-y-3">
               <SourceBadge source={parsed.source === "gemini" ? "gemini" : "heuristic"} model={parsed.model} reason={parsed.fallback_reason} fallbackModel={parsed.used_fallback_model} />
@@ -109,11 +109,11 @@ export default function Policies() {
             </div>)}
         </Card>
       </div>
-      <h2 className="mb-3 mt-8 font-medium text-white">Saved policies</h2>
+      <h2 className="mb-3 mt-8 font-medium text-strong">Saved policies</h2>
       {loading && !data ? <SkeletonRows n={2} /> : error ? <ErrorState message={error} onRetry={reload} /> : !data?.length ? <Card><EmptyState title="No policy saved" hint="Without an active policy every purchase is blocked (fail closed)." /></Card> : (
         <div className="space-y-3">{data.map((p) => (
           <Card key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <div><p className="text-sm text-white">Budget {formatMoney(p.max_budget, p.currency)} · approval above {formatMoney(p.approval_threshold, p.currency)}</p>
+            <div><p className="text-sm text-strong">Budget {formatMoney(p.max_budget, p.currency)} · approval above {formatMoney(p.approval_threshold, p.currency)}</p>
               <p className="text-xs text-slate-500">{p.approved_merchants_only ? "Approved merchants only" : "Any merchant"} · {p.duplicate_purchase_check ? "duplicates blocked" : "duplicates allowed"} · approvals expire after {p.approval_ttl_minutes} min</p></div>
             <div className="flex items-center gap-2"><Badge tone={p.is_active ? "green" : "slate"}>{p.is_active ? "Active" : "Inactive"}</Badge>
               <Button variant="outline" onClick={() => setEditing({ p, f: fieldsOf(p, merchants.data?.approved_merchants ?? []) })}><Pencil className="h-3.5 w-3.5" />Edit</Button>

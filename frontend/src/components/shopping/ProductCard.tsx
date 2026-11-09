@@ -14,12 +14,12 @@ export function ProductCard({ r, top, busy, onPropose, onApproveMerchant }: { r:
     <Card className="flex flex-col p-5">
       <ProductImage src={p.image_url} source={p.image_source} name={p.name} className="mb-3 h-32" />
       <div className="flex items-start justify-between gap-2">
-        <p className="font-medium text-white">{p.name}</p>
+        <p className="font-medium text-strong">{p.name}</p>
         {r.kind === "match" ? (top ? <Badge tone="green">Top match</Badge> : <Badge tone="green">Match</Badge>) : <Badge tone="amber">Alternative</Badge>}
       </div>
       <p className="text-xs text-slate-500">{p.brand} · {p.model} · {p.merchant}</p>
       <div className="mt-1 flex flex-wrap items-center gap-2">
-        <p className="text-lg font-semibold text-white">{formatMoney(p.price, p.currency)}</p>
+        <p className="text-lg font-semibold text-strong">{formatMoney(p.price, p.currency)}</p>
         <Badge tone={out ? "red" : p.availability === "limited_stock" ? "amber" : "green"}>{p.availability.replaceAll("_", " ")}</Badge>
         {p.source.includes("fictional") && <Badge tone="slate">Fictional demo brand</Badge>}
         {p.source.startsWith("provider:") && <Badge tone="violet">Demo provider</Badge>}

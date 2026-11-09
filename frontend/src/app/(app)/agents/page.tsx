@@ -43,8 +43,8 @@ export default function Agents() {
         : !data?.length ? <Card><EmptyState title="No agents yet" hint="Create an agent and give it limited spending permissions." action={<Button onClick={() => setCreating(true)}>Create agent</Button>} /></Card>
         : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{data.map((a) => (
           <Card key={a.id} className="p-5">
-            <div className="flex items-start justify-between"><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-600/15"><Bot className="h-5 w-5 text-violet-400" /></div>
-              <div><p className="font-medium text-white">{a.agent_name}</p><p className="font-mono text-xs text-slate-500">{a.agent_id}</p></div></div><StatusBadge value={a.status} /></div>
+            <div className="flex items-start justify-between"><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-md bg-navy-800"><Bot className="h-5 w-5 text-slate-300" /></div>
+              <div><p className="font-medium text-strong">{a.agent_name}</p><p className="font-mono text-xs text-slate-500">{a.agent_id}</p></div></div><StatusBadge value={a.status} /></div>
             <p className="mt-3 min-h-[2.5rem] text-sm text-slate-400">{a.description || "No description."}</p>
             <dl className="mt-3 grid grid-cols-2 gap-2 text-sm"><div><dt className="text-xs text-slate-500">Max per transaction</dt><dd className="text-slate-200">{formatMoney(a.max_transaction, a.currency)}</dd></div>
               <div><dt className="text-xs text-slate-500">Trust score</dt><dd className="text-slate-200">{a.trust_score ?? "—"}/100</dd></div></dl>
@@ -67,7 +67,7 @@ export default function Agents() {
             <div className="flex flex-wrap gap-1.5">{Object.entries(cats.data?.categories ?? {}).map(([c, types]) => {
               const on = chosen.includes(c);
               return <button key={c} type="button" aria-pressed={on} title={types.join(", ")} onClick={() => setChosen(on ? chosen.filter((x) => x !== c) : [...chosen, c])}
-                className={`rounded-full border px-3 py-1 text-xs ${on ? "border-violet-500 bg-violet-600/20 text-violet-300" : "border-navy-600 text-slate-400 hover:bg-navy-700"}`}>{c}</button>;
+                className={`rounded-full border px-3 py-1 text-xs ${on ? "border-strong bg-navy-800 text-strong" : "border-navy-600 text-slate-400 hover:bg-navy-700"}`}>{c}</button>;
             })}</div>
             {chosen.length === 0 && <p className="mt-1 text-xs text-warn">With no categories the agent can't buy anything.</p>}
           </fieldset>
@@ -80,4 +80,4 @@ export default function Agents() {
         onConfirm={() => confirm && setStatus(confirm.agent, confirm.status)} onClose={() => setConfirm(null)} />
     </>
   );
-}
+} 

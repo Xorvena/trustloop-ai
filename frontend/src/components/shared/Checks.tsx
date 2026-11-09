@@ -20,7 +20,7 @@ export function RiskSummary({ risk }: { risk: Risk | null }) {
   const all = [...risk.signals, ...risk.ai_signals];
   return (
     <div className="text-sm">
-      <p className="text-slate-300">Risk score <span className="font-semibold text-white">{risk.score}/100</span> ({risk.level}). <span className="text-slate-500">Heuristic, not fraud detection.</span></p>
+      <p className="text-slate-300">Risk score <span className="font-semibold text-strong">{risk.score}/100</span> ({risk.level}). <span className="text-slate-500">Heuristic, not fraud detection.</span></p>
       {all.length > 0 && <ul className="mt-1 list-disc space-y-0.5 pl-5 text-slate-400">{all.map((s, i) => <li key={i}>{s.detail || s.code} <span className="text-slate-600">[{s.source === "gemini_advisory" ? "AI advisory" : "rule"}]</span></li>)}</ul>}
     </div>
   );

@@ -15,7 +15,7 @@ export function ProductImage({ src, source, name, className }: Props) {
   return (
     // Fixed-size frame; the <img> is taken out of flow and fitted INSIDE it. (A grid with an auto row let the image render at its
     // natural height and `overflow-hidden` then showed only its top slice.) Photos get a light backdrop so transparent product shots stay visible.
-    <div className={cn("relative flex items-center justify-center overflow-hidden rounded-xl", photo && showImage ? "bg-white" : "bg-gradient-to-br from-navy-700 to-navy-800", className)}>
+    <div className={cn("relative flex items-center justify-center overflow-hidden rounded-md border border-navy-700", photo && showImage ? "bg-white" : "bg-navy-800", className)}>
       {showImage ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src as string} alt={name} loading="lazy" onError={() => setFailed(true)} className="absolute inset-0 h-full w-full object-contain p-2" />
@@ -25,11 +25,11 @@ export function ProductImage({ src, source, name, className }: Props) {
         </div>
       )}
       {showImage && source === "provider_photo" && (
-        <span title="Photo supplied by the demo product provider (not a retailer listing)" className="absolute bottom-1.5 right-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-slate-200">Demo photo</span>
+        <span title="Photo supplied by the demo product provider (not a retailer listing)" className="absolute bottom-1.5 right-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">Demo photo</span>
       )}
       {showImage && source === "illustration" && (
-        <span title="Generic illustration, not a photo of this exact product" className="absolute bottom-1.5 right-1.5 rounded bg-black/50 px-1.5 py-0.5 text-[10px] text-slate-300">Illustration</span>
+        <span title="Generic illustration, not a photo of this exact product" className="absolute bottom-1.5 right-1.5 rounded bg-black/50 px-1.5 py-0.5 text-[10px] text-white">Illustration</span>
       )}
     </div>
   );
-}
+} 

@@ -80,12 +80,12 @@ export default function Shop() {
           <SearchSummary res={res} />
           {res.matches.length > 0 && (
             <section aria-label="Matches">
-              <h2 className="mb-3 font-medium text-white">Matches <span className="text-sm font-normal text-slate-500">· satisfy every requirement checked</span></h2>
+              <h2 className="mb-3 font-medium text-strong">Matches <span className="text-sm font-normal text-slate-500">· satisfy every requirement checked</span></h2>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{res.matches.map((r, i) => <ProductCard key={r.product.id} r={r} top={i === 0} busy={proposing === r.product.id} onPropose={() => propose(r)} onApproveMerchant={approveMerchant} />)}</div>
             </section>)}
           {res.alternatives.length > 0 && (
             <section aria-label="Alternatives">
-              <h2 className="mb-1 font-medium text-white">{res.matches.length ? "Other options" : "Closest alternatives"}</h2>
+              <h2 className="mb-1 font-medium text-strong">{res.matches.length ? "Other options" : "Closest alternatives"}</h2>
               <p className="mb-3 text-sm text-slate-400">These do <b>not</b> satisfy everything you asked for. What each one misses is listed on its card.</p>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{res.alternatives.map((r) => <ProductCard key={r.product.id} r={r} busy={proposing === r.product.id} onPropose={() => propose(r)} onApproveMerchant={approveMerchant} />)}</div>
             </section>)}
@@ -94,7 +94,7 @@ export default function Shop() {
       <Modal open={!!proposal} onClose={() => setProposal(null)} title="Proposal evaluation">
         {proposal && (
           <div className="space-y-3 text-sm" key={refresh}>
-            <div className="flex items-center justify-between"><p className="text-white">{proposal.product_name} · {formatMoney(proposal.amount, proposal.currency)}</p><StatusBadge value={proposal.decision} /></div>
+            <div className="flex items-center justify-between"><p className="text-strong">{proposal.product_name} · {formatMoney(proposal.amount, proposal.currency)}</p><StatusBadge value={proposal.decision} /></div>
             <p className="text-slate-400">{proposal.decision_explanation.summary}</p>
             <PolicyChecks checks={proposal.decision_explanation.checks} />
             <RiskSummary risk={proposal.risk} />
