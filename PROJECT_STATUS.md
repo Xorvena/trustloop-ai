@@ -16,16 +16,18 @@ _Built in a sandbox with no Gemini key, PayPal credentials, PostgreSQL, browser,
 | Frontend 8 screens | Builds + typechecks + component tests; **never viewed in a real browser** |
 | Alembic 0001 + 0002 | Verified on SQLite; PostgreSQL SQL rendered offline only |
 
-## This iteration (round 3): reported problems and findings
-1. **Images "not visible properly" (cards and illustrations):** reproduced in headless Chromium: the image frame was 128 px tall but images rendered at 228-343 px and `overflow-hidden` kept only the top slice. Fixed (image fitted inside the frame, photos on a light backdrop, illustration backgrounds made transparent). Verified by measurement (0 px clipped) and screenshots.
-2. **Gemini HTTP 503/504:** genuine Google-side errors; my code gave up after one try. Also found in Google's docs that I should not set `temperature=0` for Gemini 3 (can cause looping/degraded performance) and that `thinking_level="minimal"` is rejected by 3.8 Flash. Now: no temperature override, optional thinking level (auto-dropped if rejected), retries with backoff, fallback model (`gemini-3.5-flash-lite`), circuit breaker, and honest labels naming the model that actually answered. Tested with the real SDK against a scripted local server (503/504 sequences, outage, wrong model name, key errors).
-3. **"Block state":** the policy engine was right, but my design had a flaw: an approved-but-unpaid purchase (the Aero 14, ₹62,990) kept reserving budget forever, leaving ₹12,010. Fixed: expired unpaid authorizations release budget, unpaid proposals can be cancelled (UI + API), a Budget panel shows what holds the budget, and the block message states the committed amount. Reproduced and verified end-to-end in the browser.
-4. Search noise words from agent descriptions ("finds", "recommends", "approved") no longer show as unverifiable.
+## This iteration (round 4): findings from your screenshots
+1. **Chart hover grey box:** Recharts' default tooltip cursor (`#ccc`). Now a subtle tint; the "Decisions per day" chart also gets a legend and a "closed" series (expired/cancelled/rejected/failed), because a day with only such proposals used to render as an empty, misleading column. Verified in a real browser (cursor fill read from the DOM).
+2. **PayPal buttons on white:** a light iframe inside a `color-scheme: dark` page is painted opaque white by the browser. The wrapper now declares `color-scheme: light` and the tagline strip is removed. Measured in Chromium: iframe margin pixel (255,255,255) before, card navy after.
+3. **"Debit or Credit Card" does nothing:** probable cause was in my code: orders were created with `payment_source.paypal`, which locks an order to the PayPal wallet. Removed (funding-agnostic `application_context` instead). Also: the buttons were re-mounted whenever the parent re-rendered (that can kill an open popup), error text from the SDK was hidden, and there was no way to hide an unavailable funding source (`PAYPAL_DISABLE_FUNDING`). **Not verified against PayPal**: I can't reach it from here, so the card flow is untested. Your first screenshot proves OAuth + order creation + the wallet login work.
+4. **Gemini uses the fallback model:** it means the integration works but `gemini-3.8-flash` fails for you. Cause unknown from here; added `GET /api/health/gemini/probe` (latency + classified error per model, plain and structured), a visible explanation on the page, and a per-model cooldown so a failing primary doesn't add retry delay to every search.
+5. **Silly "risk signal":** Gemini's advisory text "standard laptop purchase well within the stated budget" was shown as a risk bullet. The prompt now asks for suspicious items only (empty list otherwise) and low-severity AI remarks are dropped.
+6. **Provider returned "1 product" for a chair search but only the built-in chair was shown:** the provider's chair has the generic type "furniture". Search now includes same-category products whose name contains the word you used. Also "1 product(s)" pluralisation, and Transactions now has separate Status and Payment columns (AUTHORIZED is a status, not a payment).
 
 ## Tests actually executed
-- Backend `pytest`: **151 passed, 0 failed** (previous round: 131; originally 48, all still passing).
-- Frontend `vitest`: **33 passed**; `tsc --noEmit` clean; `next build` succeeded.
-- Real-browser (headless Chromium) checks of the real app: image clipping before/after, and the full approve-without-paying -> BLOCKED -> cancel -> unblocked flow.
+- Backend `pytest`: **167 passed, 0 failed** (previous round: 151; originally 48, all still passing).
+- Frontend `vitest`: **41 passed**; `tsc --noEmit` clean; `next build` succeeded.
+- Real-browser (headless Chromium) checks of the real app: image clipping, the approve-without-paying -> BLOCKED -> cancel -> unblocked flow, chart hover cursor, PayPal container transparency (with a stub iframe: the real PayPal SDK can't load here), transactions table.
 - Live uvicorn runs: provider reachable (local stand-in) returned provider products with image URLs, INR prices and `merchant_approved`; provider unreachable returned a clear `network_error` status.
 
 ## NOT verified

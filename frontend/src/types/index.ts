@@ -18,6 +18,7 @@ export interface SearchResponse {
   status: "matches_found" | "no_exact_match" | "nothing_found"; requirements: Record<string, unknown>; interpreted_as: string[]; unverifiable_terms: string[]; notes: string[];
   summary: string; summary_source: "gemini" | "template"; summary_model: string | null; summary_used_fallback_model: boolean; summary_fallback_reason: string | null; summary_fallback_message: string | null;
   intent_source: "gemini" | "heuristic"; intent_model: string | null; intent_used_fallback_model: boolean; intent_fallback_reason: string | null; intent_fallback_message: string | null; intent_notes: string[];
+  gemini_status: GeminiStatus | null;
   provider_status: { provider: string; ok: boolean; count: number; code: string | null; message: string | null }[];
   catalog_notice: string; matches: SearchResult[]; alternatives: SearchResult[]; results: SearchResult[];
 }
@@ -27,3 +28,4 @@ export interface TrustDetail { agent_id: string; agent_name: string; score: numb
 export interface Health { status: string; database: string; gemini_configured: boolean; gemini_model: string; paypal_configured: boolean; paypal_webhook_configured: boolean }
 export interface BudgetItem { proposal_id: string; product_name: string; merchant: string; amount: string; currency: string; state: string; cancellable: boolean; created_at: string; authorization_expires_at: string | null }
 export interface Budget { policy_active: boolean; currency: string; max_budget: string | null; committed: string; remaining: string | null; items: BudgetItem[] }
+export interface GeminiStatus { primary_model: string; fallback_model: string | null; primary_cooling_down_seconds: number; primary_last_failure: { code: string; message: string; seconds_ago: number } | null }

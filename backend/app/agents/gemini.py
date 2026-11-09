@@ -77,6 +77,8 @@ def is_configured() -> bool:
 _clients: dict[tuple, object] = {}
 _sleep = time.sleep                       # patched in tests
 _down_until = 0.0                         # simple circuit breaker (per process)
+_model_down: dict[str, float] = {}        # model -> skip-until timestamp (a failing PRIMARY model is skipped for a while)
+_last_failure: dict[str, tuple[str, str, float]] = {}   # model -> (code, safe message, timestamp)
 _used: contextvars.ContextVar[tuple[str | None, bool]] = contextvars.ContextVar("gemini_used", default=(None, False))
 TRANSIENT_CODES = {"upstream_error", "network_error"}
 
@@ -84,6 +86,8 @@ TRANSIENT_CODES = {"upstream_error", "network_error"}
 def reset_state() -> None:
     global _down_until
     _down_until = 0.0
+    _model_down.clear()
+    _last_failure.clear()
     _clients.clear()
     _used.set((None, False))
 
@@ -135,6 +139,8 @@ def generate_structured(system: str, user: str, schema: type[T], purpose: str = 
     models = [(s.gemini_model, 1 + max(0, s.gemini_retries), False)]
     if s.gemini_fallback_model and s.gemini_fallback_model != s.gemini_model:
         models.append((s.gemini_fallback_model, 2, True))
+    if len(models) > 1 and _model_down.get(s.gemini_model, 0) > time.time():
+        models = models[1:]                      # the primary failed recently: go straight to the fallback (keeps searches fast)
     last: tuple[str, str] = ("unavailable", "Gemini is unavailable.")
     client = _client()  # keep a reference for the duration of the call (see _client docstring)
     for model, attempts, is_fallback in models:
@@ -167,10 +173,19 @@ def generate_structured(system: str, user: str, schema: type[T], purpose: str = 
                 log.warning("Gemini output failed validation purpose=%s model=%s detail=%s", purpose, model, redact(str(exc))[:300])
                 last = ("bad_output", "Gemini returned output that did not match the expected schema.")
                 break
+            if not is_fallback:
+                _model_down.pop(model, None)
+                _last_failure.pop(model, None)
             _used.set((model, is_fallback))
             if is_fallback:
                 log.warning("Gemini fallback model used purpose=%s primary=%s fallback=%s", purpose, s.gemini_model, model)
             return out
+        # this model exhausted its attempts without success
+        if last[0] != "bad_output":
+            _last_failure[model] = (last[0], last[1], time.time())
+            if not is_fallback and len(models) > 1:
+                _model_down[model] = time.time() + s.gemini_model_cooldown_seconds
+                log.warning("Gemini primary model %s is failing (%s); skipping it for %ss", model, last[0], int(s.gemini_model_cooldown_seconds))
     code, msg = last
     if code in TRANSIENT_CODES:
         _down_until = time.time() + s.gemini_circuit_seconds
@@ -178,6 +193,46 @@ def generate_structured(system: str, user: str, schema: type[T], purpose: str = 
         raise GeminiBadOutput(msg) from None
     tried = " then ".join(m for m, _, _ in models)
     raise GeminiUnavailable(f"{msg} (models tried: {tried})" if len(models) > 1 else msg, code) from None
+
+
+def status() -> dict:
+    """Why the fallback model may be in use: the primary's last failure, and whether it is currently being skipped."""
+    s = get_settings()
+    now = time.time()
+    lf = _last_failure.get(s.gemini_model)
+    return {"primary_model": s.gemini_model, "fallback_model": s.gemini_fallback_model or None,
+            "primary_cooling_down_seconds": max(0, int(_model_down.get(s.gemini_model, 0) - now)),
+            "primary_last_failure": None if not lf else {"code": lf[0], "message": lf[1], "seconds_ago": int(now - lf[2])}}
+
+
+def probe(models: list[str]) -> list[dict]:
+    """Diagnostics: send ONE tiny request per model, plain and with structured output, and report latency + classified errors.
+    Does not touch the circuit breaker or cooldowns."""
+    from google.genai import types
+    from pydantic import BaseModel as _BM
+
+    class _Ping(_BM):
+        ok: bool
+
+    s = get_settings()
+    if not s.gemini_api_key:
+        return [{"model": m, "configured": False, "code": "not_configured", "message": "GEMINI_API_KEY is not configured."} for m in models]
+    client = _client()
+    out = []
+    for m in models:
+        row: dict = {"model": m}
+        for kind, cfg in (("plain", types.GenerateContentConfig(max_output_tokens=20)),
+                          ("structured", types.GenerateContentConfig(response_mime_type="application/json", response_schema=_Ping, max_output_tokens=50))):
+            t0 = time.time()
+            try:
+                r = client.models.generate_content(model=m, contents="Reply with the single word OK." if kind == "plain" else "Return ok=true.", config=cfg)
+                row[kind] = {"ok": True, "latency_ms": int((time.time() - t0) * 1000), "reply": (r.text or "")[:40]}
+            except Exception as exc:
+                code, msg = classify(exc)
+                log.warning("Gemini probe failed model=%s kind=%s code=%s type=%s detail=%s", m, kind, code, type(exc).__name__, redact(str(exc))[:300])
+                row[kind] = {"ok": False, "latency_ms": int((time.time() - t0) * 1000), "code": code, "message": msg}
+        out.append(row)
+    return out
 
 
 def check_model() -> dict:

@@ -88,7 +88,8 @@ def create_order(db: Session, user_id: str, proposal_id: str) -> dict:
         audit.record(db, action="payment.order_failed", actor="paypal", user_id=user_id, proposal_id=p.id,
                      details={"status": exc.status, "issues": exc.issues})
         db.commit()
-        raise ServiceError(502, "paypal_error", "PayPal rejected the order request.", {"issues": exc.issues}) from exc
+        detail = f" ({', '.join(exc.issues)})" if exc.issues else (f" (HTTP {exc.status})" if exc.status else "")
+        raise ServiceError(502, "paypal_error", f"PayPal rejected the order request{detail}.", {"issues": exc.issues}) from exc
     po = PaymentOrder(proposal_id=p.id, user_id=user_id, paypal_order_id=order["id"], charge_amount=amount, charge_currency=cur)
     db.add(po)
     a.consumed_at = utcnow()

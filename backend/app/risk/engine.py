@@ -74,6 +74,8 @@ def assess(inp: RiskInputs, ai_signals: list[dict] | None = None) -> RiskResult:
     for s in (ai_signals or [])[:5]:
         if isinstance(s, dict) and s.get("signal"):
             sev = s.get("severity") if s.get("severity") in ("low", "medium", "high") else "low"
+            if sev == "low":
+                continue  # low-severity AI remarks are noise (often just praise of benign context): neither shown nor scored
             clean_ai.append({"code": str(s["signal"])[:60], "severity": sev, "detail": str(s.get("explanation", ""))[:300],
                              "points": {"low": 2, "medium": 5, "high": 8}[sev], "source": "gemini_advisory"})
     ai_points = min(AI_CAP, sum(s["points"] for s in clean_ai))
