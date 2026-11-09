@@ -33,7 +33,7 @@ export function BudgetPanel({ refreshKey = 0, onChanged }: { refreshKey?: number
     <Card className="p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm text-slate-300"><Wallet className="h-4 w-4 text-violet-400" />
-          <span><b className="text-white">{formatMoney(data.remaining ?? 0, data.currency)}</b> budget remaining <span className="text-slate-500">· {formatMoney(used, data.currency)} of {formatMoney(max, data.currency)} committed</span></span>
+          <span><b className="text-strong">{formatMoney(data.remaining ?? 0, data.currency)}</b> budget remaining <span className="text-slate-500">· {formatMoney(used, data.currency)} of {formatMoney(max, data.currency)} committed</span></span>
           {unpaid > 0 && <Badge tone="amber">{unpaid} unpaid</Badge>}</div>
         <button className="flex items-center gap-1 text-xs text-violet-400 hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? "Hide" : "What's using my budget?"}{open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}</button>
       </div>

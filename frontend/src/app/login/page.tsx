@@ -2,6 +2,7 @@
 import { ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Button, Card, ErrorState, Input } from "@/components/shared/ui";
 import { api, ApiError, auth } from "@/lib/api";
 import type { User } from "@/types";
@@ -25,10 +26,11 @@ export default function Login() {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-gradient-to-b from-navy-950 to-navy-900 p-4">
+    <div className="relative grid min-h-screen place-items-center bg-navy-900 p-4">
+      <ThemeToggle className="absolute right-4 top-4" />
       <Card className="w-full max-w-md p-8">
-        <div className="mb-6 flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-600"><ShieldCheck className="h-5 w-5 text-white" /></div>
-          <div><h1 className="text-xl font-semibold text-white">TRUSTLOOP AI</h1><p className="text-sm text-slate-400">Let AI buy. Let humans stay in control.</p></div></div>
+        <div className="mb-6 flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-md bg-strong"><ShieldCheck className="h-5 w-5 text-inverse" /></div>
+          <div><h1 className="text-xl font-semibold text-strong">TrustLoop</h1><p className="text-sm text-slate-400">Sign in to your workspace</p></div></div>
         <form onSubmit={submit} className="space-y-4">
           {mode === "register" && <Input label="Name" required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />}
           <Input label="Email" type="email" required autoComplete="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
@@ -42,4 +44,4 @@ export default function Login() {
       </Card>
     </div>
   );
-}
+} 

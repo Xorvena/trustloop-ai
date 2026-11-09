@@ -44,12 +44,12 @@ export function SearchSummary({ res }: { res: SearchResponse }) {
       {res.provider_status.map((p) => p.ok && !p.message ? (
         <p key={p.provider} className="flex items-center gap-1 text-xs text-slate-500"><Info className="h-3.5 w-3.5" />Also searched demo provider “{p.provider}” ({p.count} {p.count === 1 ? "product" : "products"}). Demo data, not live retailer inventory.</p>
       ) : (
-        <div key={p.provider} role="status" className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/5 p-3 text-sm text-slate-200">
+        <div key={p.provider} role="status" className="flex items-start gap-2 rounded-md border border-red-500/30 bg-red-500/5 p-3 text-sm text-slate-200">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-bad" /><span>Product provider “{p.provider}” {p.ok ? "returned partial results" : "is unavailable"}: {p.message}. {p.ok ? "" : "Showing built-in catalog results only."}</span>
         </div>
       ))}
       {res.notes.length > 0 && (
-        <div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-slate-200">
+        <div role="status" className="rounded-md border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-slate-200">
           <ul className="space-y-1">{res.notes.map((n) => <li key={n} className="flex gap-2"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warn" />{n}</li>)}</ul>
         </div>
       )}

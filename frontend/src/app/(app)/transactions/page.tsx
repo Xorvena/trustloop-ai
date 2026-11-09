@@ -28,7 +28,7 @@ function DetailView({ id, onChanged }: { id: string; onChanged: () => void }) {
   const p = data.proposal;
   return (
     <div className="space-y-4 text-sm">
-      <div className="flex items-center justify-between"><div><p className="font-medium text-white">{data.product_name}</p><p className="text-slate-500">{data.merchant} · {formatMoney(data.amount, data.currency)}</p></div><StatusBadge value={data.state} /></div>
+      <div className="flex items-center justify-between"><div><p className="font-medium text-strong">{data.product_name}</p><p className="text-slate-500">{data.merchant} · {formatMoney(data.amount, data.currency)}</p></div><StatusBadge value={data.state} /></div>
       <PolicyChecks checks={p.decision_explanation.checks} />
       <RiskSummary risk={p.risk} />
       {(data.state === "AUTHORIZED" || data.state === "PAYPAL_ORDER_CREATED") && <PayPalCheckout proposalId={data.id} onDone={done} />}
@@ -36,8 +36,8 @@ function DetailView({ id, onChanged }: { id: string; onChanged: () => void }) {
         <div><Button variant="danger" onClick={() => setConfirmCancel(true)}>Cancel this proposal</Button><p className="mt-1 text-xs text-slate-500">Unpaid. Cancelling frees its budget and makes it impossible to pay.</p></div>)}
       <ConfirmDialog open={confirmCancel} danger busy={cancelling} title="Cancel this proposal?" confirmLabel="Cancel proposal" onConfirm={cancel} onClose={() => setConfirmCancel(false)}
         body={<>This cannot be undone. A cancelled proposal can never be paid, even if a PayPal order exists.</>} />
-      {data.receipt && <div className="rounded-lg bg-navy-900 p-3"><p className="mb-1 font-medium text-white">Receipt</p>{Object.entries(data.receipt).filter(([, v]) => v).map(([k, v]) => <p key={k} className="text-xs text-slate-400"><span className="text-slate-600">{k.replaceAll("_", " ")}:</span> <span className="font-mono">{v}</span></p>)}</div>}
-      <div><p className="mb-1 font-medium text-white">Audit trail</p><ul className="space-y-1">{data.audit.map((a) => <li key={a.id} className="text-xs text-slate-400"><span className="font-mono text-violet-400">{a.action}</span> · {a.actor} · {formatDate(a.timestamp)}</li>)}</ul></div>
+      {data.receipt && <div className="rounded-lg bg-navy-900 p-3"><p className="mb-1 font-medium text-strong">Receipt</p>{Object.entries(data.receipt).filter(([, v]) => v).map(([k, v]) => <p key={k} className="text-xs text-slate-400"><span className="text-slate-600">{k.replaceAll("_", " ")}:</span> <span className="font-mono">{v}</span></p>)}</div>}
+      <div><p className="mb-1 font-medium text-strong">Audit trail</p><ul className="space-y-1">{data.audit.map((a) => <li key={a.id} className="text-xs text-slate-400"><span className="font-mono text-violet-400">{a.action}</span> · {a.actor} · {formatDate(a.timestamp)}</li>)}</ul></div>
     </div>
   );
 }

@@ -41,9 +41,9 @@ export default function Approvals() {
               <div className="flex gap-4">
                 <ProductImage src={a.image_url} source={a.image_source} name={a.product_name} className="h-20 w-24 shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium text-white">{a.product_name}</p><Badge tone={a.kind === "REVIEW" ? "amber" : "violet"}>{a.kind.replaceAll("_", " ")}</Badge></div>
+                  <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium text-strong">{a.product_name}</p><Badge tone={a.kind === "REVIEW" ? "amber" : "violet"}>{a.kind.replaceAll("_", " ")}</Badge></div>
                   <p className="text-sm text-slate-400">{a.merchant}</p>
-                  <p className="mt-1 text-xl font-semibold text-white">{formatMoney(a.amount, a.currency)}</p>
+                  <p className="mt-1 text-xl font-semibold text-strong">{formatMoney(a.amount, a.currency)}</p>
                   <p className="mt-1 text-xs text-slate-500">Agent {a.agent_name} <span className="font-mono">({a.agent_id})</span> · trust {a.agent_trust_score ?? "—"}/100 <span className="text-slate-600">(informational only)</span></p>
                 </div>
               </div>

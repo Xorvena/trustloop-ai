@@ -6,17 +6,17 @@ import { cn } from "@/lib/utils";
 
 export function Button({ variant = "primary", className, ...p }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" | "danger" | "success" | "outline" }) {
   const v = {
-    primary: "bg-violet-600 hover:bg-violet-500 text-white",
+    primary: "bg-strong text-inverse hover:opacity-90",
     ghost: "hover:bg-navy-700 text-slate-300",
     outline: "border border-navy-600 hover:bg-navy-700 text-slate-200",
     danger: "bg-red-500/15 text-bad hover:bg-red-500/25 border border-red-500/30",
     success: "bg-emerald-500/15 text-ok hover:bg-emerald-500/25 border border-emerald-500/30",
   }[variant];
-  return <button {...p} className={cn("inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50", v, className)} />;
+  return <button {...p} className={cn("inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50", v, className)} />;
 }
 
 export const Card = ({ className, children }: { className?: string; children: ReactNode }) => (
-  <div className={cn("rounded-2xl border border-navy-700 bg-navy-850 shadow-card", className)}>{children}</div>
+  <div className={cn("rounded-lg border border-navy-700 bg-navy-850 shadow-card", className)}>{children}</div>
 );
 
 const tones: Record<string, string> = {
@@ -35,7 +35,7 @@ const STATUS_TONE: Record<string, keyof typeof tones> = {
 export const StatusBadge = ({ value }: { value: string | null }) =>
   value ? <Badge tone={STATUS_TONE[value] ?? "slate"}>{value.replaceAll("_", " ")}</Badge> : <span className="text-slate-500">—</span>;
 
-const field = "w-full rounded-lg border border-navy-600 bg-navy-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500";
+const field = "w-full rounded-md border border-navy-600 bg-navy-850 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500";
 export const Input = ({ label, className, ...p }: InputHTMLAttributes<HTMLInputElement> & { label?: string }) => (
   <label className="block text-sm text-slate-400">{label}<input {...p} className={cn(field, label && "mt-1", className)} /></label>
 );
@@ -56,7 +56,7 @@ export const EmptyState = ({ title, hint, action }: { title: string; hint?: stri
 );
 
 export const ErrorState = ({ message, onRetry }: { message: string; onRetry?: () => void }) => (
-  <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/5 p-4 text-sm">
+  <div role="alert" className="flex items-start gap-3 rounded-md border border-red-500/30 bg-red-500/5 p-4 text-sm">
     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-bad" />
     <div className="flex-1 text-slate-300">{message}</div>
     {onRetry && <Button variant="outline" onClick={onRetry} className="py-1">Retry</Button>}
@@ -67,10 +67,10 @@ export function Modal({ open, onClose, title, children }: { open: boolean; onClo
   return (
     <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[94vw] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-navy-600 bg-navy-850 p-6 shadow-2xl">
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[94vw] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-navy-600 bg-navy-850 p-6 shadow-lg">
           <div className="mb-4 flex items-start justify-between gap-4">
-            <Dialog.Title className="text-lg font-semibold text-white">{title}</Dialog.Title>
+            <Dialog.Title className="text-lg font-semibold text-strong">{title}</Dialog.Title>
             <Dialog.Close aria-label="Close" className="rounded p-1 text-slate-400 hover:bg-navy-700"><X className="h-4 w-4" /></Dialog.Close>
           </div>
           <Dialog.Description className="sr-only">{title}</Dialog.Description>
@@ -78,7 +78,7 @@ export function Modal({ open, onClose, title, children }: { open: boolean; onClo
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
-  );
+  ); 
 }
 
 export function ConfirmDialog({ open, title, body, confirmLabel, danger, busy, onConfirm, onClose }: { open: boolean; title: string; body: ReactNode; confirmLabel: string; danger?: boolean; busy?: boolean; onConfirm: () => void; onClose: () => void }) {
@@ -108,7 +108,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="fixed bottom-4 right-4 z-[60] space-y-2" aria-live="polite">
         {items.map((t) => (
-          <div key={t.id} className={cn("flex max-w-sm items-start gap-2 rounded-xl border px-4 py-3 text-sm shadow-lg", t.kind === "ok" ? "border-emerald-500/30 bg-navy-800 text-slate-100" : "border-red-500/40 bg-navy-800 text-slate-100")}>
+          <div key={t.id} className={cn("flex max-w-sm items-start gap-2 rounded-md border px-4 py-3 text-sm shadow-lg", t.kind === "ok" ? "border-emerald-500/30 bg-navy-800 text-slate-100" : "border-red-500/40 bg-navy-800 text-slate-100")}>
             {t.kind === "ok" ? <CheckCircle2 className="mt-0.5 h-4 w-4 text-ok" /> : <AlertTriangle className="mt-0.5 h-4 w-4 text-bad" />}
             <span>{t.text}</span>
           </div>
@@ -120,7 +120,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 export const PageHeader = ({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) => (
   <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-    <div><h1 className="text-2xl font-semibold tracking-tight text-white">{title}</h1>{subtitle && <p className="mt-1 text-sm text-slate-400">{subtitle}</p>}</div>
+    <div><h1 className="text-2xl font-semibold tracking-tight text-strong">{title}</h1>{subtitle && <p className="mt-1 text-sm text-slate-400">{subtitle}</p>}</div>
     {actions}
   </div>
 );

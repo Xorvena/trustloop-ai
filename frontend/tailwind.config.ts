@@ -1,18 +1,26 @@
 import type { Config } from "tailwindcss";
 
+// Theme colours are CSS variables (see globals.css), so every class works in both light and dark mode.
+const v = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
+const scale = (prefix: string, steps: number[]) => Object.fromEntries(steps.map((n) => [n, v(`${prefix}-${n}`)]));
+
 const config: Config = {
+  darkMode: ["class"],
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        navy: { 950: "#070b1a", 900: "#0b1126", 850: "#0f1630", 800: "#141c3a", 700: "#1d2750", 600: "#2a3563" },
-        violet: { 400: "#a78bfa", 500: "#8b5cf6", 600: "#7c3aed", 700: "#6d28d9" },
-        ok: "#34d399", warn: "#fbbf24", bad: "#f87171",
+        navy: scale("navy", [950, 900, 850, 800, 700, 600]),   // surfaces and borders (grays)
+        slate: scale("slate", [100, 200, 300, 400, 500, 600]), // text grays
+        violet: scale("accent", [300, 400, 500, 600, 700]),    // accent; key name kept so existing classes keep working
+        strong: v("strong"),                                   // headings and key figures
+        inverse: v("inverse"),                                 // text on a "strong" background (primary button)
+        ok: v("ok"), warn: v("warn"), bad: v("bad"),
       },
       fontFamily: { sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"] },
-      boxShadow: { card: "0 1px 0 0 rgba(255,255,255,0.03) inset, 0 8px 24px -12px rgba(0,0,0,0.6)" },
+      boxShadow: { card: "var(--shadow-card)" },
     },
   },
   plugins: [],
 };
-export default config;
+export default config; 

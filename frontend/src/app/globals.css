@@ -2,11 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
-html, body { background: #0b1126; color: #e2e8f0; }
+/* Light theme (default). Values are "R G B" so Tailwind can add opacity.
+   Layers: 900 = page, 850 = cards/inputs, 800 = hover, 700 = borders, 600 = strong borders. */
+:root {
+  color-scheme: light;
+  --navy-950: 236 236 239; --navy-900: 246 246 247; --navy-850: 255 255 255;
+  --navy-800: 238 238 240; --navy-700: 226 226 230; --navy-600: 208 208 214;
+  --slate-100: 24 24 27;   --slate-200: 39 39 42;   --slate-300: 63 63 70;
+  --slate-400: 82 82 91;   --slate-500: 113 113 122; --slate-600: 161 161 170;
+  --strong: 15 15 17;      --inverse: 250 250 250;
+  --accent-300: 47 84 150; --accent-400: 47 84 150; --accent-500: 59 105 180;
+  --accent-600: 47 84 150; --accent-700: 38 70 128;
+  --ok: 4 120 87; --warn: 180 83 9; --bad: 185 28 28;
+  --shadow-card: 0 1px 0 rgba(0, 0, 0, 0.03);
+  --skeleton-a: #ececee; --skeleton-b: #e2e2e6;
+}
+
+:root.dark {
+  color-scheme: dark;
+  --navy-950: 11 11 13;    --navy-900: 17 17 19;    --navy-850: 24 24 27;
+  --navy-800: 33 33 37;    --navy-700: 44 44 49;    --navy-600: 63 63 70;
+  --slate-100: 244 244 245; --slate-200: 228 228 231; --slate-300: 212 212 216;
+  --slate-400: 161 161 170; --slate-500: 113 113 122; --slate-600: 82 82 91;
+  --strong: 250 250 250;   --inverse: 15 15 17;
+  --accent-300: 147 180 230; --accent-400: 120 158 220; --accent-500: 90 135 205;
+  --accent-600: 63 100 170;  --accent-700: 50 82 145;
+  --ok: 52 211 153; --warn: 251 191 36; --bad: 248 113 113;
+  --shadow-card: none;
+  --skeleton-a: #212125; --skeleton-b: #2c2c31;
+}
+
+html, body { background: rgb(var(--navy-900)); color: rgb(var(--slate-200)); }
 body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
-::selection { background: rgba(139, 92, 246, 0.4); }
-:focus-visible { outline: 2px solid #8b5cf6; outline-offset: 2px; }
+::selection { background: rgb(var(--accent-500) / 0.3); }
+:focus-visible { outline: 2px solid rgb(var(--accent-500)); outline-offset: 2px; }
 @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
-.skeleton { background: linear-gradient(90deg, #141c3a 25%, #1d2750 37%, #141c3a 63%); background-size: 800px 100%; animation: shimmer 1.4s infinite linear; }
-@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+.skeleton { background: linear-gradient(90deg, var(--skeleton-a) 25%, var(--skeleton-b) 37%, var(--skeleton-a) 63%); background-size: 800px 100%; animation: shimmer 1.4s infinite linear; }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }  
