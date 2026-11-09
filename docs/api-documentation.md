@@ -15,7 +15,7 @@ Interactive OpenAPI docs: `http://localhost:8000/docs`. All routes except `/api/
 | Payments | `GET /api/payments/config`, `POST /api/payments/create-order` `{proposal_id}`, `POST /api/payments/capture` `{paypal_order_id}`, `POST /api/payments/webhook` |
 | Reporting | `GET /api/transactions[?q&state&decision&agent_id&sort&order&limit&offset]`, `GET /api/transactions/{id}`, `GET /api/analytics/{overview,spending,agents}`, `GET /api/audit-logs` |
 | Merchants | `GET /api/merchants`, `POST /api/merchants {name}` (user-initiated allowlist add, audited, idempotent) |
-| Demo/meta | `POST /api/demo/seed`, `POST /api/demo/agents` (add missing demo agents), `GET /api/health`, `GET /api/health/gemini` (auth; checks the configured model exists for your key, no generation) |
+| Demo/meta | `POST /api/demo/seed`, `POST /api/demo/agents` (add missing demo agents), `GET /api/health`, `GET /api/health/gemini` (auth; checks the configured model exists for your key, no generation), `GET /api/health/gemini/probe[?models=a,b]` (auth, 3/min; tiny plain + structured request per model with latency and classified errors) |
 
 Errors: `{ "error": "<code>", "detail": "<message>" }`. Notable codes: `approval_expired` (409), `approval_invalidated` (409), `revalidation_failed` (409, with `failures`), `approval_already_decided` (409), `paypal_not_configured` (503), `verification_failed` (502), `capture_failed` (402/502).
 
@@ -34,3 +34,5 @@ Fallback reasons: `not_configured, model_not_found, invalid_api_key, permission_
 Search response additions: `provider_status[]` (`{provider, ok, count, new_products, code, message}`), per result `merchant_approved`, `unconfirmed_terms[]`. `GET /api/products/categories` now includes provider categories. `POST /api/policies/parse` returns `source` (`gemini|heuristic_fallback`), `model`, `fallback_reason`, `fallback_message` (it falls back to the rule-based parser, labelled, when Gemini fails).
 
 Search/parse responses also include `summary_used_fallback_model`, `intent_used_fallback_model` / `used_fallback_model`: true when `GEMINI_FALLBACK_MODEL` answered (the `*_model` field always names the model that actually answered). New Gemini fallback reason: `recently_unavailable` (call skipped by the circuit breaker).
+
+`POST /api/products/search` also returns `gemini_status` (`primary_model`, `fallback_model`, `primary_cooling_down_seconds`, `primary_last_failure{code,message,seconds_ago}`) when Gemini is configured. `GET /api/payments/config` includes `disable_funding`. `GET /api/analytics/spending` daily rows include `closed` (rejected/expired/cancelled/failed).

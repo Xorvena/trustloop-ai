@@ -62,10 +62,12 @@ class PayPalClient:
         return body
 
     def create_order(self, *, reference_id: str, amount: Decimal, currency: str, description: str, request_id: str) -> dict:
+        # NOTE: no `payment_source`. An order created with payment_source.paypal is restricted to the PayPal wallet, which breaks the
+        # "Debit or Credit Card" button of the JS SDK. `application_context` is funding-agnostic.
         payload = {"intent": "CAPTURE", "purchase_units": [{
             "reference_id": reference_id, "custom_id": reference_id, "description": description[:127],
             "amount": {"currency_code": currency, "value": f"{amount:.2f}"}}],
-            "payment_source": {"paypal": {"experience_context": {"user_action": "PAY_NOW", "shipping_preference": "NO_SHIPPING"}}}}
+            "application_context": {"shipping_preference": "NO_SHIPPING", "user_action": "PAY_NOW"}}
         return self._req("POST", "/v2/checkout/orders", json=payload, request_id=request_id)
 
     def capture_order(self, order_id: str, request_id: str) -> dict:

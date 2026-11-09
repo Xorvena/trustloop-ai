@@ -302,3 +302,11 @@ def test_stale_write_conflict_maps_to_409(ctx):
         from sqlalchemy.orm.exc import StaleDataError
         with pytest.raises(StaleDataError):
             b.commit()
+
+
+def test_analytics_buckets_closed_proposals_so_days_are_not_empty(ctx):
+    p = ctx.propose("laptop", "LT-LITE13").json()                      # pending approval
+    ctx.c.post(f"/api/proposals/{p['id']}/cancel", headers=ctx.h)      # -> CANCELLED
+    ctx.propose("laptop", "LT-TITAN16")                                # blocked
+    day = ctx.c.get("/api/analytics/spending", headers=ctx.h).json()["daily"][0]
+    assert day["closed"] == 1 and day["blocked"] == 1 and day["approved"] == 0 and day["pending"] == 0

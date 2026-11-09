@@ -380,3 +380,66 @@ def test_ui_label_data_names_fallback_model(ctx, scripted_gemini):
     # fake server returns {"summary": ..} for every call so intent validation fails (labelled), but the summary call used a healthy model
     assert r["summary_source"] == "gemini" and r["summary_model"] in (MODEL, "gemini-3.5-flash-lite")
     assert "summary_used_fallback_model" in r and "intent_used_fallback_model" in r
+
+
+# ---------------------------------------------------------------- failing primary: cooldown, visibility, diagnostics
+def test_failing_primary_is_skipped_for_a_while_then_retried(scripted_gemini):
+    scripted_gemini["script"] = [503, 503, 503]                       # primary exhausted -> fallback answers
+    call()
+    assert models_called(scripted_gemini) == [MODEL] * 3 + ["gemini-3.5-flash-lite"]
+    scripted_gemini["requests"].clear()
+    call()                                                             # second call goes STRAIGHT to the fallback (no wasted retries)
+    assert models_called(scripted_gemini) == ["gemini-3.5-flash-lite"] and gemini.used_model() == ("gemini-3.5-flash-lite", True)
+    gemini._model_down[MODEL] = 0                                      # cooldown over
+    scripted_gemini["requests"].clear()
+    call()
+    assert models_called(scripted_gemini) == [MODEL] and gemini.used_model() == (MODEL, False)   # primary recovered and is used again
+    assert gemini.status()["primary_last_failure"] is None
+
+
+def test_status_explains_why_the_fallback_is_in_use(ctx, scripted_gemini):
+    scripted_gemini["script"] = [504, 504, 504]
+    r = ctx.c.post("/api/products/search", headers=ctx.h, json={"query": "Asus Vivobook 16 X1605"}).json()
+    st = r["gemini_status"]
+    assert st["primary_model"] == MODEL and st["fallback_model"] == "gemini-3.5-flash-lite"
+    assert st["primary_last_failure"]["code"] == "upstream_error" and st["primary_cooling_down_seconds"] > 0
+    assert FAKE_KEY not in json.dumps(r)
+
+
+def test_search_status_absent_when_gemini_not_configured(ctx):
+    assert ctx.c.post("/api/products/search", headers=ctx.h, json={"query": "laptop"}).json()["gemini_status"] is None
+
+
+def test_probe_reports_latency_and_classified_errors_per_model(ctx, scripted_gemini):
+    scripted_gemini["script"] = [503, 503]                             # primary: plain + structured both fail; fallback: both succeed
+    r = ctx.c.get("/api/health/gemini/probe", headers=ctx.h).json()
+    primary, fallback = r["results"]
+    assert primary["model"] == MODEL and primary["plain"]["ok"] is False and primary["plain"]["code"] == "upstream_error"
+    assert primary["structured"]["ok"] is False
+    assert fallback["model"] == "gemini-3.5-flash-lite" and fallback["plain"]["ok"] is True and fallback["structured"]["ok"] is True
+    assert isinstance(fallback["plain"]["latency_ms"], int) and FAKE_KEY not in json.dumps(r)
+    assert gemini._down_until == 0                                     # a diagnostic must not trip the circuit breaker
+
+
+def test_probe_validates_model_names_and_requires_auth(ctx, client, scripted_gemini):
+    assert ctx.c.get("/api/health/gemini/probe?models=ok-model,../../etc", headers=ctx.h).status_code == 422
+    assert ctx.c.get("/api/health/gemini/probe?models=a1,b2,c3,d4,e5", headers=ctx.h).status_code == 422
+    assert client.get("/api/health/gemini/probe").status_code == 401
+    ok = ctx.c.get("/api/health/gemini/probe?models=gemini-3.6-flash", headers=ctx.h).json()
+    assert [x["model"] for x in ok["results"]] == ["gemini-3.6-flash"]
+    assert scripted_gemini["requests"][0][0].endswith("models/gemini-3.6-flash:generateContent")
+
+
+def test_probe_when_not_configured(ctx):
+    r = ctx.c.get("/api/health/gemini/probe", headers=ctx.h).json()
+    assert r["results"][0]["code"] == "not_configured"
+
+
+def test_low_severity_ai_risk_remarks_are_dropped(ctx, gem):
+    payload = {"signals": [{"signal": "benign", "severity": "low", "explanation": "The context describes a standard laptop purchase well within the stated budget."}]}
+    gem(lambda s, c: resp(payload))
+    p = ctx.propose("laptop", "HP-WAVE").json()
+    assert p["risk"]["ai_used"] is True and p["risk"]["ai_signals"] == [] and p["risk"]["score"] == 0   # praise is not a risk signal
+    payload["signals"] = [{"signal": "pressure", "severity": "medium", "explanation": "Wording pressures an immediate purchase."}]
+    p = ctx.propose("laptop", "KB-MECH").json()
+    assert [s["code"] for s in p["risk"]["ai_signals"]] == ["pressure"] and p["risk"]["score"] == 5       # real signals still count

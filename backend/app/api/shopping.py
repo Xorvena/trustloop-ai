@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.agents import shopping
+from app.agents import gemini, shopping
 from app.agents.catalog import CATEGORIES, TYPE_ATTRIBUTES
 from app.providers.dummyjson import PROVIDER_TYPE_TO_CATEGORY
 from app.api.serializers import proposal_out
@@ -57,6 +57,7 @@ def search_products(body: ProductSearchIn, user: User = Depends(current_user), d
         "unverifiable_terms": res["unverifiable_terms"], "notes": res["notes"], "provider_status": res["provider_status"],
         "summary": sm["text"], "summary_source": sm["source"], "summary_model": sm["model"], "summary_used_fallback_model": sm["used_fallback_model"],
         "summary_fallback_reason": sm["fallback_reason"], "summary_fallback_message": sm["fallback_message"],
+        "gemini_status": gemini.status() if gemini.is_configured() else None,
         "intent_source": it["source"], "intent_model": it["model"], "intent_used_fallback_model": it["used_fallback_model"], "intent_fallback_reason": it["fallback_reason"],
         "intent_fallback_message": it["fallback_message"], "intent_notes": it["notes"],
         "catalog_notice": "Demo data (built-in catalog + demo provider): prices, specs and availability are illustrative, not live retailer data.",

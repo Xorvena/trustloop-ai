@@ -1,14 +1,15 @@
 "use client";
 import { Bot, ClipboardCheck, ShieldAlert, ShieldCheck, Wallet } from "lucide-react";
 import Link from "next/link";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Badge, Button, Card, EmptyState, ErrorState, PageHeader, Skeleton, SkeletonRows, StatusBadge, useToast } from "@/components/shared/ui";
 import { useApi } from "@/hooks/useApi";
 import { api, ApiError } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/utils";
 import type { Overview } from "@/types";
 
-interface Spending { daily: { date: string; spend: number; approved: number; blocked: number; pending: number; risk_avg: number }[] }
+interface Spending { daily: { date: string; spend: number; approved: number; blocked: number; pending: number; closed: number; risk_avg: number }[] }
+const TIP = { contentStyle: { background: "#0f1630", border: "1px solid #2a3563", borderRadius: 8 }, labelStyle: { color: "#e2e8f0" } };
 
 function Stat({ label, value, icon: Icon, tone }: { label: string; value: string | number; icon: typeof Wallet; tone?: string }) {
   return <Card className="p-5"><div className="flex items-center justify-between"><p className="text-sm text-slate-400">{label}</p><Icon className={`h-4 w-4 ${tone ?? "text-violet-400"}`} /></div><p className="mt-2 text-2xl font-semibold text-white">{value}</p></Card>;
@@ -43,7 +44,7 @@ export default function Dashboard() {
           <h2 className="mb-3 font-medium text-white">Captured spending by day</h2>
           {sp.loading ? <Skeleton className="h-56" /> : !sp.data?.daily.length ? <EmptyState title="No activity yet" hint="Spending appears here after a PayPal capture." /> : (
             <ResponsiveContainer width="100%" height={220}><AreaChart data={sp.data.daily}><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.5} /><stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} /></linearGradient></defs>
-              <CartesianGrid stroke="#1d2750" vertical={false} /><XAxis dataKey="date" stroke="#64748b" fontSize={12} /><YAxis stroke="#64748b" fontSize={12} /><Tooltip contentStyle={{ background: "#0f1630", border: "1px solid #2a3563", borderRadius: 8 }} />
+              <CartesianGrid stroke="#1d2750" vertical={false} /><XAxis dataKey="date" stroke="#64748b" fontSize={12} /><YAxis stroke="#64748b" fontSize={12} /><Tooltip {...TIP} cursor={{ stroke: "#475569" }} />
               <Area dataKey="spend" stroke="#8b5cf6" fill="url(#g)" /></AreaChart></ResponsiveContainer>)}
         </Card>
         <Card className="p-5">
@@ -67,8 +68,8 @@ export default function Dashboard() {
         </div>
       </div>
       <Card className="mt-4 p-5"><h2 className="mb-3 font-medium text-white">Decisions per day</h2>
-        {!sp.data?.daily.length ? <p className="text-sm text-slate-500">No data.</p> : <ResponsiveContainer width="100%" height={180}><BarChart data={sp.data.daily}><CartesianGrid stroke="#1d2750" vertical={false} /><XAxis dataKey="date" stroke="#64748b" fontSize={12} /><YAxis stroke="#64748b" fontSize={12} allowDecimals={false} /><Tooltip contentStyle={{ background: "#0f1630", border: "1px solid #2a3563", borderRadius: 8 }} />
-          <Bar dataKey="approved" fill="#34d399" stackId="a" /><Bar dataKey="pending" fill="#fbbf24" stackId="a" /><Bar dataKey="blocked" fill="#f87171" stackId="a" /></BarChart></ResponsiveContainer>}</Card>
+        {!sp.data?.daily.length ? <p className="text-sm text-slate-500">No data.</p> : <ResponsiveContainer width="100%" height={180}><BarChart data={sp.data.daily}><CartesianGrid stroke="#1d2750" vertical={false} /><XAxis dataKey="date" stroke="#64748b" fontSize={12} /><YAxis stroke="#64748b" fontSize={12} allowDecimals={false} /><Tooltip {...TIP} cursor={{ fill: "rgba(139, 92, 246, 0.10)" }} /><Legend wrapperStyle={{ fontSize: 12, color: "#94a3b8" }} />
+          <Bar dataKey="approved" fill="#34d399" stackId="a" /><Bar dataKey="pending" fill="#fbbf24" stackId="a" /><Bar dataKey="blocked" fill="#f87171" stackId="a" /><Bar dataKey="closed" name="closed (expired / cancelled / rejected)" fill="#64748b" stackId="a" /></BarChart></ResponsiveContainer>}</Card>
     </>
   );
 }

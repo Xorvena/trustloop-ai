@@ -96,7 +96,7 @@ def overview(user: User = Depends(current_user), db: Session = Depends(get_db)):
 def spending(user: User = Depends(current_user), db: Session = Depends(get_db)):
     props = list(db.scalars(select(PurchaseProposal).where(PurchaseProposal.user_id == user.id)).unique())
     txs = list(db.scalars(select(Transaction).where(Transaction.user_id == user.id)))
-    by_day: dict[str, dict] = defaultdict(lambda: {"date": "", "spend": 0.0, "approved": 0, "blocked": 0, "pending": 0, "risk_avg": 0.0, "n": 0})
+    by_day: dict[str, dict] = defaultdict(lambda: {"date": "", "spend": 0.0, "approved": 0, "blocked": 0, "pending": 0, "closed": 0, "risk_avg": 0.0, "n": 0})
     for t in txs:
         d = t.created_at.date().isoformat()
         by_day[d]["date"] = d
@@ -107,9 +107,8 @@ def spending(user: User = Depends(current_user), db: Session = Depends(get_db)):
         r["date"] = d
         bucket = ("approved" if p.state in ("AUTHORIZED", "PAYPAL_ORDER_CREATED", "CAPTURED")
                   else "blocked" if p.state == "BLOCKED"
-                  else "pending" if p.state == "PENDING_APPROVAL" else None)  # rejected/expired/failed are not bucketed
-        if bucket:
-            r[bucket] += 1
+                  else "pending" if p.state == "PENDING_APPROVAL" else "closed")   # closed = rejected / expired / cancelled / failed
+        r[bucket] += 1
         if p.risk:
             r["risk_avg"] += p.risk.score
             r["n"] += 1

@@ -17,7 +17,7 @@ def public_config(user: User = Depends(current_user)):
     """Only PUBLIC values for the PayPal JS SDK. The client secret never leaves the backend."""
     s = get_settings()
     return {"client_id": s.paypal_client_id or None, "currency": s.paypal_currency, "configured": bool(s.paypal_client_id and s.paypal_client_secret),
-            "inr_rate": str(s.inr_per_unit_paypal_currency), "environment": "sandbox" if "sandbox" in s.paypal_base_url else "live"}
+            "inr_rate": str(s.inr_per_unit_paypal_currency), "disable_funding": ",".join(x.strip() for x in s.paypal_disable_funding.split(",") if x.strip()), "environment": "sandbox" if "sandbox" in s.paypal_base_url else "live"}
 
 
 @router.post("/create-order", dependencies=[Depends(rate_limit("pay", 20))])

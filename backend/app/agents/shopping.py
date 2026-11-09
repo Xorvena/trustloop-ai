@@ -322,12 +322,13 @@ def haystack(p: Product) -> str:
     return " ".join([p.name, p.brand, p.model, p.product_type, str(p.description), " ".join(str(v) for v in (p.specs or {}).values())]).lower()
 
 
-def evaluate_product(p: Product, req: Requirements, keyword_terms: list[str] | None = None) -> tuple[list[dict], str | None]:
+def evaluate_product(p: Product, req: Requirements, keyword_terms: list[str] | None = None, type_ok: bool | None = None) -> tuple[list[dict], str | None]:
     s = p.specs or {}
     checks: list[dict] = []
     relation = None
     if req.product_type:
-        checks.append(_check("product_type", f"Type: {req.product_type}", p.product_type == req.product_type, f"is a {p.product_type}"))
+        ok = (p.product_type == req.product_type) if type_ok is None else type_ok
+        checks.append(_check("product_type", f"Type: {req.product_type}", ok, f"is a {p.product_type}" + (f" (name mentions '{req.type_word}')" if ok and p.product_type != req.product_type else "")))
     if req.brand:
         ok = compact(req.brand) == compact(p.brand)
         checks.append(_check("brand", f"Brand: {req.brand}", ok, f"brand is {p.brand}" if not ok else "brand matches"))
@@ -407,12 +408,17 @@ def search_catalog(products: list[Product], req: Requirements) -> dict[str, Any]
     # With nothing else to go on (e.g. "Atomic Habits"), words must match product text (hard). Alongside a type/brand/model they are
     # descriptive extras ("ergonomic", "lumbar"): shown per product as confirmed/unconfirmed, but never silently turned into a hard filter.
     keyword_terms = terms_in_catalog if title_mode else []
-    pool = [p for p in products if not req.product_type or p.product_type == req.product_type]
+    def in_type_family(p: Product) -> bool:
+        """Same product type, OR same category and the user's own type word is in the product name (e.g. 'chair' finds a provider
+        'Conference Chair' whose type is the generic 'furniture')."""
+        return (not req.product_type or p.product_type == req.product_type
+                or bool(req.type_word and p.category == category_of(req) and has_term(p.name.lower(), req.type_word.lower())))
+    pool = [p for p in products if in_type_family(p)]
     if title_mode:
         pool = [p for p in products if any(has_term(haystack(p), t) for t in keyword_terms)]
     rows = []
     for p in pool:
-        checks, relation = evaluate_product(p, req, keyword_terms)
+        checks, relation = evaluate_product(p, req, keyword_terms, type_ok=True if (not req.product_type or in_type_family(p)) else False)
         unmet = [f"{c['label']} — {c['detail']}" for c in checks if not c["met"]]
         flags = detect(p.description)
         unconfirmed = [t for t in terms_in_catalog if not has_term(haystack(p), t)] if not title_mode else []

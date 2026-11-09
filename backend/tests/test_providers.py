@@ -196,3 +196,20 @@ def test_understood_type_with_no_products_says_so_instead_of_claiming_confusion(
     assert any("No fragrance products are in the catalog right now" in n for n in r["notes"])
     assert not any("couldn't tell" in n for n in r["notes"])
     assert r["provider_status"][0]["ok"] is False and r["provider_status"][0]["code"] == "http_error"
+
+
+CHAIR = {"id": 301, "title": "Knoll Saarinen Executive Conference Chair", "description": "A classic office chair.", "category": "furniture", "price": 499.99,
+         "brand": "Knoll", "availabilityStatus": "In Stock", "tags": ["furniture", "office chairs"], "thumbnail": "https://cdn.dummyjson.com/c.webp", "images": []}
+SOFA = {"id": 302, "title": "Annibale Colombo Sofa", "description": "Italian sofa.", "category": "furniture", "price": 2499.99, "brand": "Annibale Colombo",
+        "availabilityStatus": "In Stock", "tags": ["furniture"], "thumbnail": "https://cdn.dummyjson.com/s.webp", "images": []}
+
+
+def test_provider_chair_with_generic_furniture_type_is_found_for_chair_searches(ctx, providers_on):
+    """Regression: the provider returned 1 product for 'chair' (type 'furniture') but the UI only showed the built-in chair."""
+    providers_on["prov"] = mock_provider(lambda r: httpx.Response(200, json={"products": [CHAIR, SOFA], "total": 2, "skip": 0, "limit": 20}))
+    r = search(ctx, "office chair under 50000")
+    names = [i["product"]["name"] for i in r["matches"] + r["alternatives"]]
+    assert "Knoll Saarinen Executive Conference Chair" in names and "ErgoMesh Office Chair" in names
+    assert "Annibale Colombo Sofa" not in names                       # a sofa is not a chair
+    chair = [i for i in r["results"] if i["product"]["brand"] == "Knoll"][0]
+    assert chair["product"]["image_url"].startswith("https://cdn.dummyjson.com/") and chair["kind"] == "match"

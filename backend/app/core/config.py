@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     gemini_retries: int = 2                    # extra attempts on transient errors (HTTP 500/503/504, timeouts) for the primary model
     gemini_timeout_seconds: float = 20.0       # per attempt
     gemini_total_budget_seconds: float = 45.0  # per call, across all attempts and models
+    gemini_model_cooldown_seconds: float = 120.0  # a failing primary model is skipped this long (the fallback answers directly)
     gemini_circuit_seconds: float = 30.0       # after an outage, skip Gemini this long so the app stays responsive
     gemini_thinking_level: str = ""            # "", minimal|low|medium|high. Empty = model default. NOTE: 'minimal' is rejected by some models (e.g. 3.8 Flash)
     gemini_base_url: str = ""  # optional override (proxy / tests); empty = Google default
@@ -35,6 +36,7 @@ class Settings(BaseSettings):
     paypal_base_url: str = "https://api-m.sandbox.paypal.com"
     # PayPal may not settle INR for every account/country. Orders are created in this
     # currency, converted server-side from the authoritative DB amount.
+    paypal_disable_funding: str = ""  # e.g. "card" or "card,paylater": funding sources to hide in the PayPal buttons (JS SDK `disable-funding`)
     paypal_currency: str = "USD"
     inr_per_unit_paypal_currency: Decimal = Decimal("83.00")  # demo rate, NOT live FX
 

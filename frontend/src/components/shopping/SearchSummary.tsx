@@ -26,6 +26,9 @@ export function SearchSummary({ res }: { res: SearchResponse }) {
           <Badge tone="slate">Demo catalog</Badge>
         </div>
         <p className="text-sm text-slate-200">{res.summary}</p>
+        {(res.summary_used_fallback_model || res.intent_used_fallback_model) && res.gemini_status && (
+          <p className="mt-2 flex items-start gap-1 text-xs text-slate-400"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            The primary model <b>{res.gemini_status.primary_model}</b> is not answering{res.gemini_status.primary_last_failure ? ` (${res.gemini_status.primary_last_failure.code}: ${res.gemini_status.primary_last_failure.message})` : ""}, so <b>{res.gemini_status.fallback_model}</b> was used. For the exact reason, call <code>GET /api/health/gemini/probe</code> in Swagger.</p>)}
         {fell && <p className="mt-2 flex items-start gap-1 text-xs text-warn"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{res.summary_fallback_message}</p>}
         <p className="mt-2 text-xs text-slate-500">{res.catalog_notice}</p>
       </Card>
@@ -39,7 +42,7 @@ export function SearchSummary({ res }: { res: SearchResponse }) {
         {res.unverifiable_terms.length > 0 && <p className="mt-2 flex items-start gap-1 text-xs text-warn"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />Could not verify against catalog data: {res.unverifiable_terms.join(", ")}. Results do not account for these.</p>}
       </Card>
       {res.provider_status.map((p) => p.ok && !p.message ? (
-        <p key={p.provider} className="flex items-center gap-1 text-xs text-slate-500"><Info className="h-3.5 w-3.5" />Also searched demo provider “{p.provider}” ({p.count} products). Demo data, not live retailer inventory.</p>
+        <p key={p.provider} className="flex items-center gap-1 text-xs text-slate-500"><Info className="h-3.5 w-3.5" />Also searched demo provider “{p.provider}” ({p.count} {p.count === 1 ? "product" : "products"}). Demo data, not live retailer inventory.</p>
       ) : (
         <div key={p.provider} role="status" className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/5 p-3 text-sm text-slate-200">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-bad" /><span>Product provider “{p.provider}” {p.ok ? "returned partial results" : "is unavailable"}: {p.message}. {p.ok ? "" : "Showing built-in catalog results only."}</span>

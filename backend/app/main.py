@@ -73,6 +73,19 @@ def create_app() -> FastAPI:
         from app.agents import gemini
         return gemini.check_model()
 
+    @app.get("/api/health/gemini/probe", tags=["meta"], dependencies=[Depends(rate_limit("gemini-probe", 3))])
+    def health_gemini_probe(models: str = "", user: User = Depends(current_user)):
+        """Diagnostics: tiny plain + structured request against the primary and fallback models (or `?models=a,b`), with latency and
+        classified errors. Use it to see WHY the primary model is failing."""
+        import re as _re
+        from app.agents import gemini
+        s = get_settings()
+        wanted = [m.strip() for m in models.split(",") if m.strip()] or [m for m in (s.gemini_model, s.gemini_fallback_model) if m]
+        if len(wanted) > 4 or not all(_re.fullmatch(r"[A-Za-z0-9._\-]{3,60}", m) for m in wanted):
+            from fastapi import HTTPException
+            raise HTTPException(422, "Provide up to 4 model names (letters, digits, '.', '-', '_').")
+        return {"results": gemini.probe(wanted), "status": gemini.status()}
+
     return app
 
 

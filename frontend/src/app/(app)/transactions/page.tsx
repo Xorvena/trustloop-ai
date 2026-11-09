@@ -68,11 +68,11 @@ export default function Transactions() {
       </Card>
       <Card className="overflow-x-auto p-2">
         {loading && !data ? <div className="p-3"><SkeletonRows /></div> : error ? <div className="p-3"><ErrorState message={error} onRetry={reload} /></div> : !data?.length ? <EmptyState title="No transactions match" hint="Adjust filters or create a purchase proposal." /> : (
-          <table className="w-full text-left text-sm"><thead className="text-xs text-slate-500"><tr><th className="p-3">ID</th><th>Product</th><th>Agent</th><th>Amount</th><th>Decision</th><th>Payment</th><th>When</th></tr></thead>
+          <table className="w-full text-left text-sm"><thead className="text-xs text-slate-500"><tr><th className="p-3">ID</th><th>Product</th><th>Agent</th><th>Amount</th><th>Decision</th><th>Status</th><th>Payment</th><th>When</th></tr></thead>
             <tbody className="divide-y divide-navy-700">{data.map((t) => (
               <tr key={t.id} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && setOpen(t.id)} onClick={() => setOpen(t.id)} className="cursor-pointer hover:bg-navy-800">
                 <td className="p-3 font-mono text-xs text-slate-500">{t.id.slice(0, 8)}</td><td className="text-slate-200">{t.product_name}<div className="text-xs text-slate-500">{t.merchant}</div></td><td className="text-slate-400">{t.agent_name}</td>
-                <td>{formatMoney(t.amount, t.currency)}</td><td><StatusBadge value={t.decision} /></td><td><StatusBadge value={t.payment_status ?? t.state} /></td><td className="text-xs text-slate-500">{formatDate(t.created_at)}</td></tr>))}</tbody></table>)}
+                <td>{formatMoney(t.amount, t.currency)}</td><td><StatusBadge value={t.decision} /></td><td><StatusBadge value={t.state} /></td><td>{t.payment_status ? <StatusBadge value={t.payment_status} /> : <span className="text-xs text-slate-500">{["AUTHORIZED", "PAYPAL_ORDER_CREATED"].includes(t.state) ? "Not paid yet" : "—"}</span>}</td><td className="text-xs text-slate-500">{formatDate(t.created_at)}</td></tr>))}</tbody></table>)}
       </Card>
       <Modal open={!!open} onClose={() => setOpen(null)} title="Transaction details">{open && <DetailView id={open} onChanged={reload} />}</Modal>
     </>

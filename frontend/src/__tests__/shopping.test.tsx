@@ -19,7 +19,7 @@ const response = (over: Partial<SearchResponse> = {}): SearchResponse => ({
   status: "no_exact_match", requirements: {}, interpreted_as: ["brand: ASUS", "model: VivobookX16"], unverifiable_terms: [], notes: ["'ASUS VivobookX16' isn't in the catalog."],
   summary: "No exact match. 'ASUS VivobookX16' isn't in the catalog.", summary_source: "template", summary_model: null, summary_used_fallback_model: false, summary_fallback_reason: "model_not_found",
   summary_fallback_message: "Gemini summary unavailable (Model 'x' was not found); showing a built-in template summary instead.", intent_source: "heuristic", intent_model: null, intent_used_fallback_model: false,
-  intent_fallback_reason: "model_not_found", intent_fallback_message: "x", intent_notes: [], provider_status: [], catalog_notice: "Curated demo catalog: prices, specs and availability are illustrative, not live retailer data.",
+  intent_fallback_reason: "model_not_found", intent_fallback_message: "x", intent_notes: [], gemini_status: null, provider_status: [], catalog_notice: "Curated demo catalog: prices, specs and availability are illustrative, not live retailer data.",
   matches: [], alternatives: [result()], results: [result()], ...over,
 });
 
@@ -88,6 +88,20 @@ describe("providers, merchants and honesty", () => {
   it("lists descriptive terms that are not confirmed in the product details", () => {
     render(<ProductCard r={result({ kind: "match", meets_requirements: true, unmet: [], unconfirmed_terms: ["armrests", "adjustable"] })} busy={false} onPropose={() => {}} />);
     expect(screen.getByText(/Not confirmed in product details: armrests, adjustable/)).toBeInTheDocument();
+  });
+});
+
+describe("fallback model explanation", () => {
+  it("explains why the fallback model answered, using the primary's last failure", () => {
+    render(<SearchSummary res={response({ summary_source: "gemini", summary_model: "gemini-3.5-flash-lite", summary_used_fallback_model: true, summary_fallback_reason: null,
+      gemini_status: { primary_model: "gemini-3.8-flash", fallback_model: "gemini-3.5-flash-lite", primary_cooling_down_seconds: 90, primary_last_failure: { code: "upstream_error", message: "Gemini service error (HTTP 504).", seconds_ago: 5 } } })} />);
+    expect(screen.getByText(/is not answering/)).toBeInTheDocument();
+    expect(screen.getByText(/upstream_error: Gemini service error \(HTTP 504\)/)).toBeInTheDocument();
+    expect(screen.getByText(/\/api\/health\/gemini\/probe/)).toBeInTheDocument();
+  });
+  it("pluralises the provider count", () => {
+    render(<SearchSummary res={response({ provider_status: [{ provider: "dummyjson", ok: true, count: 1, code: null, message: null }] })} />);
+    expect(screen.getByText(/\(1 product\)/)).toBeInTheDocument();
   });
 });
 
